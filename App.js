@@ -7,10 +7,13 @@ import { WheelPicker } from './components'
 
 const wait = ms => new Promise((resolve) => setTimeout(resolve, ms));
 
-const startNOW = moment().startOf('day')
-const data = new Array(25).fill(0).map((_, i) => i)
+const startDay = moment().subtract(7, 'd').startOf('day')
+console.log(111, 'startDay', startDay.format())
+const data = new Array(24 * 7 * 3 + 1)
+  .fill(0)
+  .map((_, i) => i)
   .map(d => {
-    const date = startNOW.clone().add(d, 'hour')
+    const date = startDay.clone().add(d, 'hour')
     return {
       id: String(d),
       label: date.format('HH:mm'),
@@ -31,25 +34,34 @@ export default class App extends React.Component {
   componentDidMount () {
     const { active } = this.state
     wait(5).then( () => {
-      this.picker.scrollToIndex({ animated: false, index: active.get('h') })
+      // this.picker.scrollToIndex({ animated: false, index: active.get('h') })
+      this.picker.scrollToOffset({
+        offset: this.getNowOffset()
+      })
     });
+  }
+
+  getNowOffset = () => {
+    const nowOffset = moment().diff(startDay, 'm')
+    // console.log(111, 'nowOffset', nowOffset)
+    return nowOffset
   }
 
   setCurrentAccordingToOffset = (x) => {
     this.setState({
-      active: moment().startOf('d').add(x, 'm')
+      active: startDay.clone().add(x, 'm')
     })
   }
 
   onMomentumScrollEnd = (event) => {
     const x = event.nativeEvent.contentOffset.x
-    console.log(222, 'onMomentumScrollEnd', x)
+    // console.log(222, 'onMomentumScrollEnd', x)
     this.setCurrentAccordingToOffset(x)
   }
 
   onScrollEndDrag = (event) => {
     const x = event.nativeEvent.contentOffset.x
-    console.log(111, 'onScrollEndDrag', x)
+    // console.log(111, 'onScrollEndDrag', x)
     this.setCurrentAccordingToOffset(x)
   }
 
@@ -63,9 +75,9 @@ export default class App extends React.Component {
           data={dataWithDummy}
           onScrollEndDrag={this.onScrollEndDrag}
           onMomentumScrollEnd={this.onMomentumScrollEnd}
-          decelerationRate={.5}
+          decelerationRate={.1}
         />
-        <Text>{active.format('YYYY-MM-DD HH:mm')}</Text>
+        <Text style={styles.text}>{active.format('YYYY-MM-DD HH:mm')}</Text>
       </View>
     )
   }
@@ -78,4 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  text: {
+    paddingVertical: 10
+  }
 })
